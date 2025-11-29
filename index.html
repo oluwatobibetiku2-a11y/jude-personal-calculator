@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jude — Personal Calculator</title>
+    <meta name="description" content="Welcome to Jude's personal calculator — a clean page with a single welcome button." />
+    <style>
+      :root { --blue: #1e90ff; --blue-dark: #187bcd; --deep-blue: #0b3b82; --light-green: #28c76f; --page-bg: #e6f7ff; }
+      html, body { height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--page-bg); }
+
+      /* Header - don't fix it so it won't block page when scrolling */
+      header { position: relative; display: flex; justify-content: center; padding: 18px 0; }
+      header .welcome-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+      main { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding-top: 100px; }
+
+      /* Blue rounded welcome button */
+      .welcome-btn { background-color: var(--blue); color: #fff; border: none; padding: 14px 28px; border-radius: 9999px; font-size: 18px; font-weight: 700; letter-spacing: 0.4px; cursor: pointer; box-shadow: 0 8px 28px rgba(30,144,255,0.16); transition: transform 0.13s ease, box-shadow 0.13s ease, background-color 0.13s ease; pointer-events: auto; }
+      .welcome-btn:hover, .welcome-btn:focus { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(30,144,255,0.22); background-color: var(--blue-dark); outline: none; }
+      .welcome-btn:active { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30,144,255,0.14); }
+
+      @media (max-width: 420px) { .welcome-btn { width: calc(100% - 40px); padding: 12px 18px; font-size: 16px; } main { padding-top: 120px; } }
+
+      /* Example content card */
+      .card { background: #fff; border-radius: 12px; padding: 36px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); max-width: 820px; width: calc(100% - 40px); text-align: center; }
+      /* calculator side image (appears to the side of calculator controls) */
+      .calc-image { width: 360px; max-width: 28%; display:flex; align-items:center; justify-content:center; }
+      .calc-image img { width: 100%; max-width:360px; height: auto; border-radius: 8px; display:block; }
+      h1 { margin: 0 0 8px 0; font-size: 26px; }
+      p { margin: 0; color: #555; }
+
+      /* calculator area */
+      .calculator { margin-top: 24px; background: #a6e6ff; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+      .calc-row { display:flex; gap:16px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+
+      /* arithmetic */
+      .arith { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 10px; display:flex; flex-direction:column; gap:8px; min-width:280px; }
+      .arith input { padding:8px 10px; font-size:18px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); width:100%; box-sizing:border-box; }
+      .keys { display:grid; grid-template-columns: repeat(4, 56px); gap:8px; justify-content:center; }
+      .key { background:#fff; border-radius:8px; padding:10px; text-align:center; cursor:pointer; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
+      .key.op { background:#f3f7fb; }
+      .key.equals { background:#ff4d4d; color:#fff; font-weight:700; }
+
+      /* result box attached to equals */
+      .result-wrap { display:flex; align-items:center; gap:10px; }
+      .result-box { background: #e6f7ff; padding: 8px 14px; border-radius: 8px; min-width: 140px; text-align:center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+      /* sets area */
+      .sets { background: rgba(255,255,255,0.95); padding:12px; border-radius:10px; min-width:320px; display:flex; flex-direction:column; gap:10px; }
+      .sets .controls { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+      .letters { display:grid; grid-template-columns: repeat(7, 34px); gap:6px; justify-content:center; }
+      .letter { background:#f9fdff; border-radius:6px; padding:6px; text-align:center; cursor:pointer; border:1px solid rgba(0,0,0,0.06); }
+      .letter.active { background:#d0f0ff; box-shadow:0 4px 8px rgba(0,0,0,0.06); }
+      .set-display { background:#fff; padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); min-width:120px; text-align:center; }
+      .set-label { font-weight:700; font-size:13px; }
+      .set-actions { display:flex; gap:8px; }
+      .set-btn { background: #bfeeff; border: none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+      .set-result { background:#e6f7ff; padding:8px 10px; border-radius:8px; min-width:160px; text-align:center; }
+
+      /* Disclaimer / intro below calculator */
+      .disclaimer { margin-top: 20px; text-align: left; background: linear-gradient(90deg, rgba(255,255,255,0.86), rgba(246,252,255,0.8)); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.04); }
+      .disclaimer .name { color: var(--deep-blue); font-weight: 900; font-size: 18px; letter-spacing: 0.8px; margin-bottom: 4px; }
+      .disclaimer .degree { color: var(--light-green); font-weight: 700; text-transform: uppercase; font-size: 12px; margin-bottom: 10px; }
+      .disclaimer .label { color: #333; font-weight: 800; margin-right: 6px; }
+      .disclaimer .disclaimer-header { display:flex; gap: 14px; align-items:center; justify-content:flex-start; flex-wrap:wrap; margin-bottom:10px; }
+      .disclaimer p { margin: 6px 0; color: #2a2a2a; font-size: 14px; line-height: 1.45; }
+      @media (max-width: 640px) { .disclaimer .name { font-size: 16px; } .disclaimer { padding: 10px 12px; } }
+    </style>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="welcome-wrap">
+        <button class="welcome-btn" aria-label="Welcome to Jude Personal Calculator">WELCOME TO JUDE PERSONAL CALCULATOR</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Jude's Personal Calculator</h1>
+        <p>Calculator content goes here — replace this with your app or controls.</p>
+        <!-- Calculator UI: arithmetic + set operations -->
+        <div class="calculator" aria-label="Calculator area">
+          <div class="calc-row">
+            <div class="arith">
+              <label style="font-weight:700;">Arithmetic</label>
+              <input id="arith-display" placeholder="Type expression or use buttons (e.g. 5+3*2)" />
+              <div style="display:flex;justify-content:center;align-items:center;gap:12px;">
+                <div class="keys" id="numeric-keys">
+                  <div class="key op">C</div>
+                  <div class="key op">⌫</div>
+                  <div class="key op">+</div>
+                  <div class="key op">/</div>
+
+                  <div class="key">7</div>
+                  <div class="key">8</div>
+                  <div class="key">9</div>
+                  <div class="key op">×</div>
+
+                  <div class="key">4</div>
+                  <div class="key">5</div>
+                  <div class="key">6</div>
+                  <div class="key op">-</div>
+
+                  <div class="key">1</div>
+                  <div class="key">2</div>
+                  <div class="key">3</div>
+                  <div class="key">.</div>
+
+                  <div class="key">0</div>
+                  <div class="key op">(</div>
+                  <div class="key op">)</div>
+                  <div class="key op">%</div>
+                </div>
+                <div class="result-wrap">
+                  <button id="compute-arith" class="key equals">=</button>
+                  <div id="arith-result" class="result-box" aria-live="polite">---</div>
+                </div>
+                </div>
+
+            
+
+            </div>
+
+            <div class="sets">
+              <label style="font-weight:700;">Sets (A / B)</label>
+              <div style="display:flex;gap:8px;align-items:center;justify-content:center">
+                <div class="set-display" id="setA">Set A: &nbsp;<strong id="setA-val">{ }</strong></div>
+                <div class="set-display" id="setB">Set B: &nbsp;<strong id="setB-val">{ }</strong></div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <label style="font-size:13px;">Active set:</label>
+                <button id="selectA" class="set-btn" aria-pressed="true">A</button>
+                <button id="selectB" class="set-btn" aria-pressed="false">B</button>
+              </div>
+
+              <div class="letters" id="letters">
+                <!-- letters A-Z inserted by script to keep HTML short -->
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+                <div class="set-actions">
+                  <button id="unionBtn" class="set-btn">Union (A ∪ B)</button>
+                  <button id="intersectBtn" class="set-btn">Intersection (A ∩ B)</button>
+                  <button id="diffBtn" class="set-btn">Difference (A - B)</button>
+                </div>
+                <div id="set-result" class="set-result">Result: { }</div>
+              </div>
+            </div>
+            <!-- image moved to the right side of the calculator controls so it doesn't block anything -->
+            <div class="calc-image" aria-hidden="false">
+              <img src="profile.jpg" alt="Selected image" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer / intro about the developer and how the calculator works -->
+        <section class="disclaimer" aria-label="About the developer">
+          <div class="disclaimer-header">
+            <div><span class="label">NAME;</span><span class="name">BETIKU OLUWATOBILOBA JUDE</span></div>
+            <div><span class="label">DEPARTMENT:</span><span class="degree">COMPUTER SCIENCE</span></div>
+          </div>
+          <p>Hello — I'm <strong class="name">BETIKU OLUWATOBILOBA JUDE</strong>. Welcome to my personal calculator. Below is a short explanation of how the two calculator areas work so you can use them quickly.</p>
+
+          <p><strong>Arithmetic:</strong> Use the arithmetic panel to type expressions or click the keypad. Supported operators are <code>+</code>, <code>-</code>, <span title="times">×</span> (visual multiplication), <code>/</code>, parentheses, decimals and <code>%</code>. The percent sign is interpreted as a percentage (e.g., <code>50%</code> becomes <code>50/100</code> when evaluated). Multiplication is shown as <span>×</span> but evaluated as <code>*</code> internally. Press <strong>=</strong> to compute the result — the output appears in the small result box next to the equals button. Use the <strong>C</strong> button to clear and <strong>⌫</strong> to delete the last character.</p>
+
+          <p><strong>Sets (A / B):</strong> The sets area lets you build two letter-sets (A and B) — select the active set then click letters A–Z to add or remove them. Use the operation buttons to compute <em>Union (A ∪ B)</em>, <em>Intersection (A ∩ B)</em>, or <em>Difference (A - B)</em>. Results display in the set result box. Use <strong>Clear A</strong> or <strong>Clear B</strong> to empty a set at any time.</p>
+        </section>
+    </main>
+    <script>
+      (function(){
+        // Arithmetic keys
+        const display = document.getElementById('arith-display');
+        const numericKeys = document.getElementById('numeric-keys');
+        const computeBtn = document.getElementById('compute-arith');
+        const arithResult = document.getElementById('arith-result');
+
+        // (numeric key handling and compute are handled lower, including support for × and percent)
+
+        // Sets logic
+        const lettersDiv = document.getElementById('letters');
+        const setAVal = document.getElementById('setA-val');
+        const setBVal = document.getElementById('setB-val');
+        const selectA = document.getElementById('selectA');
+        const selectB = document.getElementById('selectB');
+        const unionBtn = document.getElementById('unionBtn');
+        const intersectBtn = document.getElementById('intersectBtn');
+        const diffBtn = document.getElementById('diffBtn');
+        const setResult = document.getElementById('set-result');
+
+        let active = 'A';
+        const A = new Set();
+        const B = new Set();
+
+        function updateDisplays(){
+          const sortTo = s => Array.from(s).sort().join(', ');
+          setAVal.textContent = '{ ' + sortTo(A) + ' }';
+          setBVal.textContent = '{ ' + sortTo(B) + ' }';
+        }
+
+        function toggleLetter(letter){
+          const target = active === 'A' ? A : B;
+          if (target.has(letter)) target.delete(letter); else target.add(letter);
+          updateDisplays();
+        }
+
+        // populate A-Z
+        for(let i=65;i<=90;i++){
+          const ch = String.fromCharCode(i);
+          const btn = document.createElement('div');
+          btn.className = 'letter'; btn.textContent = ch; btn.dataset.letter = ch;
+          btn.title = 'Toggle ' + ch + ' in active set (' + active + ')';
+          btn.addEventListener('click', () => { toggleLetter(ch); btn.classList.toggle('active'); });
+          lettersDiv.appendChild(btn);
+        }
+
+        selectA.addEventListener('click', () => { active = 'A'; selectA.setAttribute('aria-pressed','true'); selectB.setAttribute('aria-pressed','false'); updateLetterTitles(); });
+        selectB.addEventListener('click', () => { active = 'B'; selectB.setAttribute('aria-pressed','true'); selectA.setAttribute('aria-pressed','false'); updateLetterTitles(); });
+
+        function updateLetterTitles(){
+          lettersDiv.querySelectorAll('.letter').forEach(l => { l.title = 'Toggle ' + l.dataset.letter + ' in active set (' + active + ')'; });
+        }
+
+        function showSetResult(set){ setResult.textContent = 'Result: { ' + Array.from(set).sort().join(', ') + ' }'; }
+
+        unionBtn.addEventListener('click', ()=>{ const res = new Set([...A,...B]); showSetResult(res); });
+        intersectBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>B.has(x))); showSetResult(res); });
+        diffBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>!B.has(x))); showSetResult(res); });
+
+        // clear/backspace handlers for arithmetic use
+        numericKeys.addEventListener('click', e => {
+          if (!e.target.classList.contains('key')) return;
+          const v = e.target.textContent.trim();
+          if (v === 'C') { display.value = ''; arithResult.textContent = '---'; return; }
+          if (v === '⌫') { display.value = (display.value || '').slice(0,-1); return; }
+          // percent just append as % (not evaluated) — user can use /100 in expression
+          if (v === '×') { display.value = (display.value || '') + '×'; return; }
+          if (v === '+') { display.value = (display.value || '') + '+'; return; }
+          if (v === '%') { display.value = (display.value || '') + '%'; return; }
+          // all other keys append as-is
+          if (!['C','⌫','×','+','%'].includes(v)) display.value = (display.value || '') + v;
+        });
+
+        // update compute to accept × and %: replace × with * and % with /100.
+        computeBtn.addEventListener('click', () => {
+          let expr = (display.value || '').trim();
+          if (!expr) { arithResult.textContent = '—'; return; }
+          // transform visual characters to JS friendly
+          expr = expr.replace(/×/g, '*').replace(/%/g, '/100');
+          if (!/^[0-9+\-*/().\s]+$/.test(expr)) { arithResult.textContent = 'Invalid chars'; return; }
+          try {
+            const result = Function('return (' + expr + ')')();
+            if (Number.isFinite(result)) arithResult.textContent = result;
+            else arithResult.textContent = 'NaN';
+          } catch(err){ arithResult.textContent = 'Error'; }
+        });
+
+        // add clear buttons for sets
+        const clearA = document.createElement('button'); clearA.className='set-btn'; clearA.textContent='Clear A';
+        const clearB = document.createElement('button'); clearB.className='set-btn'; clearB.textContent='Clear B';
+        const actionsRow = unionBtn.parentElement;
+        actionsRow.appendChild(clearA); actionsRow.appendChild(clearB);
+        clearA.addEventListener('click', ()=>{ A.clear(); updateDisplays(); setResult.textContent='Result: { }'; });
+        clearB.addEventListener('click', ()=>{ B.clear(); updateDisplays(); setResult.textContent='Result: { }'; });
+
+        // clean up initial state
+        updateDisplays();
+      })();
+    </script>
+  </body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jude — Personal Calculator</title>
+    <meta name="description" content="Welcome to Jude's personal calculator — a clean page with a single welcome button." />
+    <style>
+      :root { --blue: #1e90ff; --blue-dark: #187bcd; --deep-blue: #0b3b82; --light-green: #28c76f; --page-bg: #e6f7ff; }
+      html, body { height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--page-bg); }
+
+      /* Header - don't fix it so it won't block page when scrolling */
+      header { position: relative; display: flex; justify-content: center; padding: 18px 0; }
+      header .welcome-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+      main { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding-top: 100px; }
+
+      /* Blue rounded welcome button */
+      .welcome-btn { background-color: var(--blue); color: #fff; border: none; padding: 14px 28px; border-radius: 9999px; font-size: 18px; font-weight: 700; letter-spacing: 0.4px; cursor: pointer; box-shadow: 0 8px 28px rgba(30,144,255,0.16); transition: transform 0.13s ease, box-shadow 0.13s ease, background-color 0.13s ease; pointer-events: auto; }
+      .welcome-btn:hover, .welcome-btn:focus { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(30,144,255,0.22); background-color: var(--blue-dark); outline: none; }
+      .welcome-btn:active { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30,144,255,0.14); }
+
+      @media (max-width: 420px) { .welcome-btn { width: calc(100% - 40px); padding: 12px 18px; font-size: 16px; } main { padding-top: 120px; } }
+
+      /* Example content card */
+      .card { background: #fff; border-radius: 12px; padding: 36px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); max-width: 820px; width: calc(100% - 40px); text-align: center; }
+      /* calculator side image (appears to the side of calculator controls) */
+      .calc-image { width: 360px; max-width: 28%; display:flex; align-items:center; justify-content:center; }
+      .calc-image img { width: 100%; max-width:360px; height: auto; border-radius: 8px; display:block; }
+      h1 { margin: 0 0 8px 0; font-size: 26px; }
+      p { margin: 0; color: #555; }
+
+      /* calculator area */
+      .calculator { margin-top: 24px; background: #a6e6ff; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+      .calc-row { display:flex; gap:16px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+
+      /* arithmetic */
+      .arith { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 10px; display:flex; flex-direction:column; gap:8px; min-width:280px; }
+      .arith input { padding:8px 10px; font-size:18px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); width:100%; box-sizing:border-box; }
+      .keys { display:grid; grid-template-columns: repeat(4, 56px); gap:8px; justify-content:center; }
+      .key { background:#fff; border-radius:8px; padding:10px; text-align:center; cursor:pointer; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
+      .key.op { background:#f3f7fb; }
+      .key.equals { background:#ff4d4d; color:#fff; font-weight:700; }
+
+      /* result box attached to equals */
+      .result-wrap { display:flex; align-items:center; gap:10px; }
+      .result-box { background: #e6f7ff; padding: 8px 14px; border-radius: 8px; min-width: 140px; text-align:center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+      /* sets area */
+      .sets { background: rgba(255,255,255,0.95); padding:12px; border-radius:10px; min-width:320px; display:flex; flex-direction:column; gap:10px; }
+      .sets .controls { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+      .letters { display:grid; grid-template-columns: repeat(7, 34px); gap:6px; justify-content:center; }
+      .letter { background:#f9fdff; border-radius:6px; padding:6px; text-align:center; cursor:pointer; border:1px solid rgba(0,0,0,0.06); }
+      .letter.active { background:#d0f0ff; box-shadow:0 4px 8px rgba(0,0,0,0.06); }
+      .set-display { background:#fff; padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); min-width:120px; text-align:center; }
+      .set-label { font-weight:700; font-size:13px; }
+      .set-actions { display:flex; gap:8px; }
+      .set-btn { background: #bfeeff; border: none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+      .set-result { background:#e6f7ff; padding:8px 10px; border-radius:8px; min-width:160px; text-align:center; }
+
+      /* Disclaimer / intro below calculator */
+      .disclaimer { margin-top: 20px; text-align: left; background: linear-gradient(90deg, rgba(255,255,255,0.86), rgba(246,252,255,0.8)); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.04); }
+      .disclaimer .name { color: var(--deep-blue); font-weight: 900; font-size: 18px; letter-spacing: 0.8px; margin-bottom: 4px; }
+      .disclaimer .degree { color: var(--light-green); font-weight: 700; text-transform: uppercase; font-size: 12px; margin-bottom: 10px; }
+      .disclaimer .label { color: #333; font-weight: 800; margin-right: 6px; }
+      .disclaimer .disclaimer-header { display:flex; gap: 14px; align-items:center; justify-content:flex-start; flex-wrap:wrap; margin-bottom:10px; }
+      .disclaimer p { margin: 6px 0; color: #2a2a2a; font-size: 14px; line-height: 1.45; }
+      @media (max-width: 640px) { .disclaimer .name { font-size: 16px; } .disclaimer { padding: 10px 12px; } }
+    </style>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="welcome-wrap">
+        <button class="welcome-btn" aria-label="Welcome to Jude Personal Calculator">WELCOME TO JUDE PERSONAL CALCULATOR</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Jude's Personal Calculator</h1>
+        <p>Calculator content goes here — replace this with your app or controls.</p>
+        <!-- Calculator UI: arithmetic + set operations -->
+        <div class="calculator" aria-label="Calculator area">
+          <div class="calc-row">
+            <div class="arith">
+              <label style="font-weight:700;">Arithmetic</label>
+              <input id="arith-display" placeholder="Type expression or use buttons (e.g. 5+3*2)" />
+              <div style="display:flex;justify-content:center;align-items:center;gap:12px;">
+                <div class="keys" id="numeric-keys">
+                  <div class="key op">C</div>
+                  <div class="key op">⌫</div>
+                  <div class="key op">+</div>
+                  <div class="key op">/</div>
+
+                  <div class="key">7</div>
+                  <div class="key">8</div>
+                  <div class="key">9</div>
+                  <div class="key op">×</div>
+
+                  <div class="key">4</div>
+                  <div class="key">5</div>
+                  <div class="key">6</div>
+                  <div class="key op">-</div>
+
+                  <div class="key">1</div>
+                  <div class="key">2</div>
+                  <div class="key">3</div>
+                  <div class="key">.</div>
+
+                  <div class="key">0</div>
+                  <div class="key op">(</div>
+                  <div class="key op">)</div>
+                  <div class="key op">%</div>
+                </div>
+                <div class="result-wrap">
+                  <button id="compute-arith" class="key equals">=</button>
+                  <div id="arith-result" class="result-box" aria-live="polite">---</div>
+                </div>
+                </div>
+
+            
+
+            </div>
+
+            <div class="sets">
+              <label style="font-weight:700;">Sets (A / B)</label>
+              <div style="display:flex;gap:8px;align-items:center;justify-content:center">
+                <div class="set-display" id="setA">Set A: &nbsp;<strong id="setA-val">{ }</strong></div>
+                <div class="set-display" id="setB">Set B: &nbsp;<strong id="setB-val">{ }</strong></div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <label style="font-size:13px;">Active set:</label>
+                <button id="selectA" class="set-btn" aria-pressed="true">A</button>
+                <button id="selectB" class="set-btn" aria-pressed="false">B</button>
+              </div>
+
+              <div class="letters" id="letters">
+                <!-- letters A-Z inserted by script to keep HTML short -->
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+                <div class="set-actions">
+                  <button id="unionBtn" class="set-btn">Union (A ∪ B)</button>
+                  <button id="intersectBtn" class="set-btn">Intersection (A ∩ B)</button>
+                  <button id="diffBtn" class="set-btn">Difference (A - B)</button>
+                </div>
+                <div id="set-result" class="set-result">Result: { }</div>
+              </div>
+            </div>
+            <!-- image moved to the right side of the calculator controls so it doesn't block anything -->
+            <div class="calc-image" aria-hidden="false">
+              <img src="profile.jpg" alt="Selected image" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer / intro about the developer and how the calculator works -->
+        <section class="disclaimer" aria-label="About the developer">
+          <div class="disclaimer-header">
+            <div><span class="label">NAME;</span><span class="name">BETIKU OLUWATOBILOBA JUDE</span></div>
+            <div><span class="label">DEPARTMENT:</span><span class="degree">COMPUTER SCIENCE</span></div>
+          </div>
+          <p>Hello — I'm <strong class="name">BETIKU OLUWATOBILOBA JUDE</strong>. Welcome to my personal calculator. Below is a short explanation of how the two calculator areas work so you can use them quickly.</p>
+
+          <p><strong>Arithmetic:</strong> Use the arithmetic panel to type expressions or click the keypad. Supported operators are <code>+</code>, <code>-</code>, <span title="times">×</span> (visual multiplication), <code>/</code>, parentheses, decimals and <code>%</code>. The percent sign is interpreted as a percentage (e.g., <code>50%</code> becomes <code>50/100</code> when evaluated). Multiplication is shown as <span>×</span> but evaluated as <code>*</code> internally. Press <strong>=</strong> to compute the result — the output appears in the small result box next to the equals button. Use the <strong>C</strong> button to clear and <strong>⌫</strong> to delete the last character.</p>
+
+          <p><strong>Sets (A / B):</strong> The sets area lets you build two letter-sets (A and B) — select the active set then click letters A–Z to add or remove them. Use the operation buttons to compute <em>Union (A ∪ B)</em>, <em>Intersection (A ∩ B)</em>, or <em>Difference (A - B)</em>. Results display in the set result box. Use <strong>Clear A</strong> or <strong>Clear B</strong> to empty a set at any time.</p>
+        </section>
+    </main>
+    <script>
+      (function(){
+        // Arithmetic keys
+        const display = document.getElementById('arith-display');
+        const numericKeys = document.getElementById('numeric-keys');
+        const computeBtn = document.getElementById('compute-arith');
+        const arithResult = document.getElementById('arith-result');
+
+        // (numeric key handling and compute are handled lower, including support for × and percent)
+
+        // Sets logic
+        const lettersDiv = document.getElementById('letters');
+        const setAVal = document.getElementById('setA-val');
+        const setBVal = document.getElementById('setB-val');
+        const selectA = document.getElementById('selectA');
+        const selectB = document.getElementById('selectB');
+        const unionBtn = document.getElementById('unionBtn');
+        const intersectBtn = document.getElementById('intersectBtn');
+        const diffBtn = document.getElementById('diffBtn');
+        const setResult = document.getElementById('set-result');
+
+        let active = 'A';
+        const A = new Set();
+        const B = new Set();
+
+        function updateDisplays(){
+          const sortTo = s => Array.from(s).sort().join(', ');
+          setAVal.textContent = '{ ' + sortTo(A) + ' }';
+          setBVal.textContent = '{ ' + sortTo(B) + ' }';
+        }
+
+        function toggleLetter(letter){
+          const target = active === 'A' ? A : B;
+          if (target.has(letter)) target.delete(letter); else target.add(letter);
+          updateDisplays();
+        }
+
+        // populate A-Z
+        for(let i=65;i<=90;i++){
+          const ch = String.fromCharCode(i);
+          const btn = document.createElement('div');
+          btn.className = 'letter'; btn.textContent = ch; btn.dataset.letter = ch;
+          btn.title = 'Toggle ' + ch + ' in active set (' + active + ')';
+          btn.addEventListener('click', () => { toggleLetter(ch); btn.classList.toggle('active'); });
+          lettersDiv.appendChild(btn);
+        }
+
+        selectA.addEventListener('click', () => { active = 'A'; selectA.setAttribute('aria-pressed','true'); selectB.setAttribute('aria-pressed','false'); updateLetterTitles(); });
+        selectB.addEventListener('click', () => { active = 'B'; selectB.setAttribute('aria-pressed','true'); selectA.setAttribute('aria-pressed','false'); updateLetterTitles(); });
+
+        function updateLetterTitles(){
+          lettersDiv.querySelectorAll('.letter').forEach(l => { l.title = 'Toggle ' + l.dataset.letter + ' in active set (' + active + ')'; });
+        }
+
+        function showSetResult(set){ setResult.textContent = 'Result: { ' + Array.from(set).sort().join(', ') + ' }'; }
+
+        unionBtn.addEventListener('click', ()=>{ const res = new Set([...A,...B]); showSetResult(res); });
+        intersectBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>B.has(x))); showSetResult(res); });
+        diffBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>!B.has(x))); showSetResult(res); });
+
+        // clear/backspace handlers for arithmetic use
+        numericKeys.addEventListener('click', e => {
+          if (!e.target.classList.contains('key')) return;
+          const v = e.target.textContent.trim();
+          if (v === 'C') { display.value = ''; arithResult.textContent = '---'; return; }
+          if (v === '⌫') { display.value = (display.value || '').slice(0,-1); return; }
+          // percent just append as % (not evaluated) — user can use /100 in expression
+          if (v === '×') { display.value = (display.value || '') + '×'; return; }
+          if (v === '+') { display.value = (display.value || '') + '+'; return; }
+          if (v === '%') { display.value = (display.value || '') + '%'; return; }
+          // all other keys append as-is
+          if (!['C','⌫','×','+','%'].includes(v)) display.value = (display.value || '') + v;
+        });
+
+        // update compute to accept × and %: replace × with * and % with /100.
+        computeBtn.addEventListener('click', () => {
+          let expr = (display.value || '').trim();
+          if (!expr) { arithResult.textContent = '—'; return; }
+          // transform visual characters to JS friendly
+          expr = expr.replace(/×/g, '*').replace(/%/g, '/100');
+          if (!/^[0-9+\-*/().\s]+$/.test(expr)) { arithResult.textContent = 'Invalid chars'; return; }
+          try {
+            const result = Function('return (' + expr + ')')();
+            if (Number.isFinite(result)) arithResult.textContent = result;
+            else arithResult.textContent = 'NaN';
+          } catch(err){ arithResult.textContent = 'Error'; }
+        });
+
+        // add clear buttons for sets
+        const clearA = document.createElement('button'); clearA.className='set-btn'; clearA.textContent='Clear A';
+        const clearB = document.createElement('button'); clearB.className='set-btn'; clearB.textContent='Clear B';
+        const actionsRow = unionBtn.parentElement;
+        actionsRow.appendChild(clearA); actionsRow.appendChild(clearB);
+        clearA.addEventListener('click', ()=>{ A.clear(); updateDisplays(); setResult.textContent='Result: { }'; });
+        clearB.addEventListener('click', ()=>{ B.clear(); updateDisplays(); setResult.textContent='Result: { }'; });
+
+        // clean up initial state
+        updateDisplays();
+      })();
+    </script>
+  </body>
+</html>
