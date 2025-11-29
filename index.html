@@ -230,10 +230,15 @@
         // Add single pair of Clear A / Clear B buttons to the operation area (no duplicates)
         const clearA = document.createElement('button'); clearA.className='set-btn clear-btn'; clearA.textContent='Clear A';
         const clearB = document.createElement('button'); clearB.className='set-btn clear-btn'; clearB.textContent='Clear B';
+        // remove-one buttons (remove last-added element from the set)
+        const remOneA = document.createElement('button'); remOneA.className='set-btn clear-btn'; remOneA.textContent='Remove one from set A';
+        const remOneB = document.createElement('button'); remOneB.className='set-btn clear-btn'; remOneB.textContent='Remove one from set B';
         // attach to the first actions container
         const actionsContainer = unionBtn.parentElement;
         actionsContainer.appendChild(clearA);
         actionsContainer.appendChild(clearB);
+        actionsContainer.appendChild(remOneA);
+        actionsContainer.appendChild(remOneB);
 
         clearA.addEventListener('click', ()=>{
           A.clear(); // reset visual selection that were added to A
@@ -255,6 +260,46 @@
             if (idx !== -1) members.splice(idx,1);
             l.dataset.members = members.join(',');
             if (!l.dataset.members) { l.classList.remove('selected'); }
+          });
+          updateSetsDisplay();
+          showSetResult('', new Set());
+        });
+
+        // remove one (last inserted) from A
+        remOneA.addEventListener('click', ()=>{
+          if (!A.size) return; // nothing to remove
+          const arr = Array.from(A);
+          const last = arr[arr.length-1];
+          if (last == null) return;
+          A.delete(last);
+          // remove membership from button nodes
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            if (b.dataset.value === last){
+              const members = (b.dataset.members||'').split(',').filter(Boolean);
+              const idx = members.indexOf('A'); if (idx !== -1) members.splice(idx,1);
+              b.dataset.members = members.join(',');
+              if (!b.dataset.members) b.classList.remove('selected');
+            }
+          });
+          updateSetsDisplay();
+          // reflect result cleared (optional)
+          showSetResult('', new Set());
+        });
+
+        // remove one (last inserted) from B
+        remOneB.addEventListener('click', ()=>{
+          if (!B.size) return;
+          const arr = Array.from(B);
+          const last = arr[arr.length-1];
+          if (last == null) return;
+          B.delete(last);
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            if (b.dataset.value === last){
+              const members = (b.dataset.members||'').split(',').filter(Boolean);
+              const idx = members.indexOf('B'); if (idx !== -1) members.splice(idx,1);
+              b.dataset.members = members.join(',');
+              if (!b.dataset.members) b.classList.remove('selected');
+            }
           });
           updateSetsDisplay();
           showSetResult('', new Set());

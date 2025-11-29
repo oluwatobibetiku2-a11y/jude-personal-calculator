@@ -308,8 +308,11 @@
         // add clear buttons for sets
         const clearA = document.createElement('button'); clearA.className='set-btn clear-btn'; clearA.textContent='Clear A';
         const clearB = document.createElement('button'); clearB.className='set-btn clear-btn'; clearB.textContent='Clear B';
+        // remove one (last) buttons
+        const remOneA = document.createElement('button'); remOneA.className='set-btn clear-btn'; remOneA.textContent='Remove one from set A';
+        const remOneB = document.createElement('button'); remOneB.className='set-btn clear-btn'; remOneB.textContent='Remove one from set B';
         const actionsRow = unionBtn.parentElement;
-        actionsRow.appendChild(clearA); actionsRow.appendChild(clearB);
+        actionsRow.appendChild(clearA); actionsRow.appendChild(clearB); actionsRow.appendChild(remOneA); actionsRow.appendChild(remOneB);
         clearA.addEventListener('click', ()=>{
           // remove items tracked as selected in A
           A.clear(); updateDisplays(); showSetResult('', new Set());
@@ -330,6 +333,44 @@
             b.dataset.members = m.join(',');
             if (!b.dataset.members) { b.classList.remove('selected'); b.removeAttribute('aria-pressed'); }
           });
+        });
+
+        // remove one from A (last inserted)
+        remOneA.addEventListener('click', ()=>{
+          if (!A.size) return;
+          const items = Array.from(A);
+          const last = items[items.length - 1];
+          if (!last) return;
+          A.delete(last);
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            if (b.dataset.value === last){
+              const m = (b.dataset.members||'').split(',').filter(Boolean);
+              const idx = m.indexOf('A'); if (idx !== -1) m.splice(idx,1);
+              b.dataset.members = m.join(',');
+              if (!b.dataset.members) b.classList.remove('selected');
+            }
+          });
+          updateDisplays();
+          showSetResult('', new Set());
+        });
+
+        // remove one from B (last inserted)
+        remOneB.addEventListener('click', ()=>{
+          if (!B.size) return;
+          const items = Array.from(B);
+          const last = items[items.length - 1];
+          if (!last) return;
+          B.delete(last);
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            if (b.dataset.value === last){
+              const m = (b.dataset.members||'').split(',').filter(Boolean);
+              const idx = m.indexOf('B'); if (idx !== -1) m.splice(idx,1);
+              b.dataset.members = m.join(',');
+              if (!b.dataset.members) b.classList.remove('selected');
+            }
+          });
+          updateDisplays();
+          showSetResult('', new Set());
         });
 
         // clean up initial state
