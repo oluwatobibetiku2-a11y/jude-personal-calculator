@@ -28,7 +28,7 @@
       .keys{display:grid;grid-template-columns:repeat(4,56px);gap:8px;justify-content:center;margin-top:8px}
       .key{background:#fff;border-radius:8px;padding:10px;text-align:center;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.06)}
       .key.op{background:#f3f7fb}
-      .key.equals{background:#ff4d4d;color:#fff;font-weight:700}
+      .key.equals{background:#dff6ff;color:#0b3b82;font-weight:800;border:1px solid rgba(11,59,130,0.08)}
       .result-wrap{display:flex;align-items:center;gap:10px;margin-left:10px}
       .result-circle{width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#e6f7ff,#cff0ff);border-radius:9999px;color:#0b3b82;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
 
@@ -38,10 +38,14 @@
       /* selected letters should stay white (per user's request) and show a subtle border to indicate permanence */
       .letter.selected{background:#fff;color:#222;border:1px solid rgba(11,59,130,0.10);box-shadow:inset 0 0 0 2px rgba(11,59,130,0.03)}
       .set-display{display:flex;gap:8px;justify-content:center;margin-bottom:6px}
-      .set-result{background:#ffe8e8;padding:12px;border-radius:6px;color:#8b0000;font-weight:700;border:1px solid rgba(200,50,50,0.12);display:block}
+      .set-result{background:linear-gradient(180deg,#e6f7ff,#cff0ff);padding:12px;border-radius:6px;color:#0b3b82;font-weight:700;border:1px solid rgba(11,59,130,0.08);display:block}
 
       /* style for active A/B selector buttons (light blue) */
       .set-btn[aria-pressed="true"], .set-btn.active-set { background:#dff6ff; color: #0b3b82; border:1px solid rgba(11,59,130,0.08); }
+      /* set action buttons (union/intersect/diff) should also be light-blue */
+      .set-actions .set-btn { background:#dff6ff; color:#0b3b82; border:1px solid rgba(11,59,130,0.08); }
+      /* clear buttons should be red */
+      .clear-btn { background:#ff5c5c; color:#fff; border: 1px solid rgba(190,30,30,0.12); }
 
       /* small screens */
       @media (max-width:720px){.calculator{flex-direction:column;align-items:stretch}.intro-right{display:none}}
@@ -163,14 +167,15 @@
         const A = new Set();
         const B = new Set();
 
+        function formatItem(v){ return /^[A-Z]$/.test(v) ? v.toLowerCase() : v; }
         function updateSetsDisplay(){
-          // update the counts visible in the top of the sets panel
-          const aCount = A.size;
-          const bCount = B.size;
+          // show the actual items in parentheses, empty => ()
           const aEl = document.getElementById('setA-display');
           const bEl = document.getElementById('setB-display');
-          if (aEl) aEl.textContent = `Set A (${aCount})`;
-          if (bEl) bEl.textContent = `Set B (${bCount})`;
+          const aItems = Array.from(A).sort().map(formatItem).join(',');
+          const bItems = Array.from(B).sort().map(formatItem).join(',');
+          if (aEl) aEl.textContent = `Set A (${ aItems || '' })`.replace('( )','()');
+          if (bEl) bEl.textContent = `Set B (${ bItems || '' })`.replace('( )','()');
         }
 
         function addToSet(value, btn){
@@ -205,14 +210,21 @@
         selectB.addEventListener('click', ()=> { active='B'; refreshActiveVisuals(); });
 
         // set operations
-        function showSetResult(set){ setResult.textContent = 'Result: { ' + Array.from(set).sort().join(', ') + ' }'; }
-        unionBtn.addEventListener('click', ()=> showSetResult(new Set([...A,...B])));
-        intersectBtn.addEventListener('click', ()=> showSetResult(new Set([...A].filter(x=>B.has(x)))));
-        diffBtn.addEventListener('click', ()=> showSetResult(new Set([...A].filter(x=>!B.has(x)))));
+        function showSetResult(label, set){
+          const items = Array.from(set).sort().map(formatItem).join(',');
+          if (!label || !label.trim()){
+            setResult.textContent = 'Result: ' + (items ? `(${items})` : '()');
+          } else {
+            setResult.textContent = 'Result: ' + label + ' (' + (items || '') + ')';
+          }
+        }
+        unionBtn.addEventListener('click', ()=> showSetResult('a u b', new Set([...A,...B])));
+        intersectBtn.addEventListener('click', ()=> showSetResult('a n b', new Set([...A].filter(x=>B.has(x)))));
+        diffBtn.addEventListener('click', ()=> showSetResult('a - b', new Set([...A].filter(x=>!B.has(x)))));
 
         // Add single pair of Clear A / Clear B buttons to the operation area (no duplicates)
-        const clearA = document.createElement('button'); clearA.className='set-btn'; clearA.textContent='Clear A';
-        const clearB = document.createElement('button'); clearB.className='set-btn'; clearB.textContent='Clear B';
+        const clearA = document.createElement('button'); clearA.className='set-btn clear-btn'; clearA.textContent='Clear A';
+        const clearB = document.createElement('button'); clearB.className='set-btn clear-btn'; clearB.textContent='Clear B';
         // attach to the first actions container
         const actionsContainer = unionBtn.parentElement;
         actionsContainer.appendChild(clearA);
@@ -222,13 +234,13 @@
           A.clear(); // reset visual selection that were added to A
           lettersDiv.querySelectorAll('.letter').forEach(l=>{ if (l.dataset.selectedIn === 'A'){ l.classList.remove('selected'); l.style.pointerEvents='auto'; delete l.dataset.selectedIn } });
           updateSetsDisplay();
-          showSetResult(new Set());
+          showSetResult('', new Set());
         });
         clearB.addEventListener('click', ()=>{
           B.clear();
           lettersDiv.querySelectorAll('.letter').forEach(l=>{ if (l.dataset.selectedIn === 'B'){ l.classList.remove('selected'); l.style.pointerEvents='auto'; delete l.dataset.selectedIn } });
           updateSetsDisplay();
-          showSetResult(new Set());
+          showSetResult('', new Set());
         });
 
         // Arithmetic keypad handlers

@@ -73,7 +73,9 @@
       .set-label { font-weight:700; font-size:13px; }
       .set-actions { display:flex; gap:8px; }
       .set-btn { background: #bfeeff; border: none; padding:8px 10px; border-radius:8px; cursor:pointer; }
-      .set-result { background:#ffe8e8; padding:12px 12px; border-radius:6px; min-width:160px; text-align:center; color:#8b0000; border: 1px solid rgba(200,50,50,0.15); font-weight:700; box-shadow: 0 6px 18px rgba(255,185,185,0.18); display:block; word-break:break-word; }
+      .set-result { background:linear-gradient(180deg,#e6f7ff,#cff0ff); padding:12px 12px; border-radius:6px; min-width:160px; text-align:center; color:#0b3b82; border: 1px solid rgba(11,59,130,0.08); font-weight:700; box-shadow: 0 6px 18px rgba(200,220,240,0.18); display:block; word-break:break-word; }
+      .set-actions .set-btn { background:#dff6ff; color:#0b3b82; border:1px solid rgba(11,59,130,0.08); }
+      .clear-btn { background:#ff5c5c; color:#fff; border: 1px solid rgba(190,30,30,0.12); }
       .set-btn[aria-pressed="true"], .set-btn.active-set { background:#dff6ff; color:#0b3b82; border:1px solid rgba(11,59,130,0.08); }
 
       /* Disclaimer / intro below calculator */
@@ -145,8 +147,8 @@
               <div class="panel-title" style="font-size:14px;color:#0b3b82;">Sets (A / B)</div>
               <div class="sets">
               <div style="display:flex;gap:18px;align-items:center;justify-content:center">
-                    <div class="set-display" id="setA-display">Set A (0)</div>
-                    <div class="set-display" id="setB-display">Set B (0)</div>
+                    <div class="set-display" id="setA-display">Set A ()</div>
+                    <div class="set-display" id="setB-display">Set B ()</div>
                   </div>
 
               <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -160,13 +162,13 @@
               </div>
 
               <div style="display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
-                <button id="unionBtn" class="set-btn">Union (A ∪ B)</button>
-                <button id="intersectBtn" class="set-btn">Intersection (A ∩ B)</button>
-                <button id="diffBtn" class="set-btn">Difference (A - B)</button>
+                <button id="unionBtn" class="set-btn">a u b</button>
+                <button id="intersectBtn" class="set-btn">a n b</button>
+                <button id="diffBtn" class="set-btn">a - b</button>
               </div>
 
               <div style="display:flex;justify-content:center;margin-top:10px;">
-                <div id="set-result" class="set-result" style="width:92%;min-height:44px;padding:10px;">Result: { }</div>
+                <div id="set-result" class="set-result" style="width:92%;min-height:44px;padding:10px;">Result: </div>
               </div>
               </div>
             </div>
@@ -217,12 +219,12 @@
         const A = new Set();
         const B = new Set();
 
+        function formatItem(v){ return /^[A-Z]$/.test(v) ? v.toLowerCase() : v; }
         function updateDisplays(){
-          const sortTo = s => Array.from(s).sort().join(', ');
-          // update the display counts at the top of the sets panel
-          if (setADisplay) setADisplay.textContent = `Set A (${A.size})`;
-          if (setBDisplay) setBDisplay.textContent = `Set B (${B.size})`;
-          // keep the results shown in the result box only and not inside these counters
+          const aItems = Array.from(A).sort().map(formatItem).join(',');
+          const bItems = Array.from(B).sort().map(formatItem).join(',');
+          if (setADisplay) setADisplay.textContent = `Set A (${ aItems || '' })`.replace('( )','()');
+          if (setBDisplay) setBDisplay.textContent = `Set B (${ bItems || '' })`.replace('( )','()');
         }
 
         function addToSet(value, btn){
@@ -259,11 +261,18 @@
           lettersDiv.querySelectorAll('.letter').forEach(l => { l.title = 'Add ' + l.dataset.value + ' to active set (' + active + ')'; });
         }
 
-        function showSetResult(set){ setResult.textContent = 'Result: { ' + Array.from(set).sort().join(', ') + ' }'; }
+        function showSetResult(label, set){
+          const items = Array.from(set).sort().map(formatItem).join(',');
+          if (!label || !label.trim()){
+            setResult.textContent = 'Result: ' + (items ? `(${items})` : '()');
+          } else {
+            setResult.textContent = 'Result: ' + label + ' (' + (items || '') + ')';
+          }
+        }
 
-        unionBtn.addEventListener('click', ()=>{ const res = new Set([...A,...B]); showSetResult(res); });
-        intersectBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>B.has(x))); showSetResult(res); });
-        diffBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>!B.has(x))); showSetResult(res); });
+        unionBtn.addEventListener('click', ()=>{ const res = new Set([...A,...B]); showSetResult('a u b', res); });
+        intersectBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>B.has(x))); showSetResult('a n b', res); });
+        diffBtn.addEventListener('click', ()=>{ const res = new Set([...A].filter(x=>!B.has(x))); showSetResult('a - b', res); });
 
         // clear/backspace handlers for arithmetic use
         numericKeys.addEventListener('click', e => {
@@ -294,17 +303,17 @@
         });
 
         // add clear buttons for sets
-        const clearA = document.createElement('button'); clearA.className='set-btn'; clearA.textContent='Clear A';
-        const clearB = document.createElement('button'); clearB.className='set-btn'; clearB.textContent='Clear B';
+        const clearA = document.createElement('button'); clearA.className='set-btn clear-btn'; clearA.textContent='Clear A';
+        const clearB = document.createElement('button'); clearB.className='set-btn clear-btn'; clearB.textContent='Clear B';
         const actionsRow = unionBtn.parentElement;
         actionsRow.appendChild(clearA); actionsRow.appendChild(clearB);
         clearA.addEventListener('click', ()=>{
           // remove items tracked as selected in A
-          A.clear(); updateDisplays(); setResult.textContent='Result: { }';
+          A.clear(); updateDisplays(); showSetResult('', new Set());
           lettersDiv.querySelectorAll('.letter').forEach(b=>{ if (b.dataset.selectedIn === 'A'){ b.classList.remove('selected'); b.removeAttribute('aria-pressed'); b.style.pointerEvents='auto'; delete b.dataset.selectedIn; } });
         });
         clearB.addEventListener('click', ()=>{
-          B.clear(); updateDisplays(); setResult.textContent='Result: { }';
+          B.clear(); updateDisplays(); showSetResult('', new Set());
           lettersDiv.querySelectorAll('.letter').forEach(b=>{ if (b.dataset.selectedIn === 'B'){ b.classList.remove('selected'); b.removeAttribute('aria-pressed'); b.style.pointerEvents='auto'; delete b.dataset.selectedIn; } });
         });
 
