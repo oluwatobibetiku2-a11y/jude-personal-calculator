@@ -124,10 +124,10 @@
             <div class="letters" id="letters"></div>
 
             <!-- operations row: union/intersect/diff + Clear A/B horizontally (light blue) -->
-            <div style="display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
-              <button id="unionBtn" class="set-btn">Union (A ∪ B)</button>
-              <button id="intersectBtn" class="set-btn">Intersection (A ∩ B)</button>
-              <button id="diffBtn" class="set-btn">Difference (A - B)</button>
+            <div class="set-actions" style="display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+              <button id="unionBtn" class="set-btn">a u b</button>
+              <button id="intersectBtn" class="set-btn">a n b</button>
+              <button id="diffBtn" class="set-btn">a - b</button>
               <!-- clear buttons appended by script too, but keep layout ordered here -->
             </div>
 
@@ -180,10 +180,15 @@
 
         function addToSet(value, btn){
           const target = active === 'A' ? A : B;
-          if (target.has(value)) return; // already in set — permanent selection
+          if (target.has(value)) return; // already in that same set
+          // add to the target set
           target.add(value);
-          // visually keep item white but mark it permanent
-          btn.classList.add('selected'); btn.style.pointerEvents='none'; btn.dataset.selectedIn = active;
+          // track membership on the button so clearing only removes membership for that set
+          const memberships = (btn.dataset.members || '').split(',').filter(Boolean);
+          if (!memberships.includes(active)) memberships.push(active);
+          btn.dataset.members = memberships.join(',');
+          // show 'selected' state visually, but allow clicks (so it can also be added to the other set)
+          btn.classList.add('selected');
           updateSetsDisplay();
         }
 
@@ -232,13 +237,25 @@
 
         clearA.addEventListener('click', ()=>{
           A.clear(); // reset visual selection that were added to A
-          lettersDiv.querySelectorAll('.letter').forEach(l=>{ if (l.dataset.selectedIn === 'A'){ l.classList.remove('selected'); l.style.pointerEvents='auto'; delete l.dataset.selectedIn } });
+          lettersDiv.querySelectorAll('.letter').forEach(l=>{
+            const members = (l.dataset.members || '').split(',').filter(Boolean);
+            const idx = members.indexOf('A');
+            if (idx !== -1) members.splice(idx,1);
+            l.dataset.members = members.join(',');
+            if (!l.dataset.members) { l.classList.remove('selected'); }
+          });
           updateSetsDisplay();
           showSetResult('', new Set());
         });
         clearB.addEventListener('click', ()=>{
           B.clear();
-          lettersDiv.querySelectorAll('.letter').forEach(l=>{ if (l.dataset.selectedIn === 'B'){ l.classList.remove('selected'); l.style.pointerEvents='auto'; delete l.dataset.selectedIn } });
+          lettersDiv.querySelectorAll('.letter').forEach(l=>{
+            const members = (l.dataset.members || '').split(',').filter(Boolean);
+            const idx = members.indexOf('B');
+            if (idx !== -1) members.splice(idx,1);
+            l.dataset.members = members.join(',');
+            if (!l.dataset.members) { l.classList.remove('selected'); }
+          });
           updateSetsDisplay();
           showSetResult('', new Set());
         });

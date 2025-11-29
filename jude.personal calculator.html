@@ -231,9 +231,12 @@
           const target = active === 'A' ? A : B;
           if (target.has(value)) return; // already added — permanent selection
           target.add(value);
-          // visually mark selected and make it permanent (no toggle)
-          // leave the button white (per user request) and show it as permanent by disabling pointer events
-          btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); btn.style.pointerEvents = 'none'; btn.dataset.selectedIn = active;
+          // visually mark selected and make it permanent for that set
+          // track memberships so the same element can belong to both sets
+          const memberships = (btn.dataset.members || '').split(',').filter(Boolean);
+          if (!memberships.includes(active)) memberships.push(active);
+          btn.dataset.members = memberships.join(',');
+          btn.classList.add('selected');
           updateDisplays();
           updateDisplays();
         }
@@ -310,11 +313,23 @@
         clearA.addEventListener('click', ()=>{
           // remove items tracked as selected in A
           A.clear(); updateDisplays(); showSetResult('', new Set());
-          lettersDiv.querySelectorAll('.letter').forEach(b=>{ if (b.dataset.selectedIn === 'A'){ b.classList.remove('selected'); b.removeAttribute('aria-pressed'); b.style.pointerEvents='auto'; delete b.dataset.selectedIn; } });
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            const m = (b.dataset.members||'').split(',').filter(Boolean);
+            const idx = m.indexOf('A');
+            if (idx !== -1) m.splice(idx,1);
+            b.dataset.members = m.join(',');
+            if (!b.dataset.members) { b.classList.remove('selected'); b.removeAttribute('aria-pressed'); }
+          });
         });
         clearB.addEventListener('click', ()=>{
           B.clear(); updateDisplays(); showSetResult('', new Set());
-          lettersDiv.querySelectorAll('.letter').forEach(b=>{ if (b.dataset.selectedIn === 'B'){ b.classList.remove('selected'); b.removeAttribute('aria-pressed'); b.style.pointerEvents='auto'; delete b.dataset.selectedIn; } });
+          lettersDiv.querySelectorAll('.letter').forEach(b=>{
+            const m = (b.dataset.members||'').split(',').filter(Boolean);
+            const idx = m.indexOf('B');
+            if (idx !== -1) m.splice(idx,1);
+            b.dataset.members = m.join(',');
+            if (!b.dataset.members) { b.classList.remove('selected'); b.removeAttribute('aria-pressed'); }
+          });
         });
 
         // clean up initial state
