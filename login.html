@@ -3,383 +3,90 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login — Flying Birds</title>
+  <title>Login — Kite</title>
   <style>
-    :root{
-      --bg1:#dffadf;
-      --bg2:#a8e6a1;
-      --card-bg: rgba(255,255,255,0.9);
-      --glass-border: rgba(255,255,255,0.6);
-      --accent:#2a7df6; /* blue accent for buttons */
-      --muted:#3f5f43;
-    }
+    :root{ --blue1:#dff4ff; --blue2:#bfe9ff; --card:#ffffff; --accent:#2b7df6; --muted:#506070 }
     html,body{height:100%;}
     body{
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: linear-gradient(160deg,var(--bg1) 0%, var(--bg2) 100%);
-      -webkit-font-smoothing:antialiased;
-      color:#0b2545;
-      overflow:hidden;
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; -webkit-font-smoothing:antialiased;
+      background: linear-gradient(180deg,var(--blue1) 0%, var(--blue2) 100%);
+      display:flex;align-items:center;justify-content:center;overflow:auto;padding:40px;
+      color:#0b2b4a;
     }
 
-    /* sky container for birds */
-    .sky{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      overflow:hidden;
-      z-index:0;
+    /* Kite background: centered rotated square */
+    .kite-wrap{position:relative;width:min(960px,95vw);height:min(720px,85vh);display:flex;align-items:center;justify-content:center}
+    .kite{
+      position:absolute; width:70vmin; height:70vmin; max-width:760px; max-height:760px; 
+      transform:rotate(45deg); border-radius:8px; overflow:visible; z-index:0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(240,250,255,0.7) 100%);
+      display:block; box-shadow: 0 25px 60px rgba(20,40,80,0.08);
     }
+    /* subtle pattern within kite */
+    .kite::before{ content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(240,250,255,0.02) 60%); mix-blend-mode:overlay }
 
-    /* bird base styles */
-    .bird{
-      position:absolute;
-      width:calc(80px * var(--size,0.5));
-      height:auto;
-      transform-origin:center;
-      opacity:0.95;
-      filter:drop-shadow(0 6px 10px rgba(30,80,200,0.06));
-      animation-name:fly, bob;
-      animation-timing-function:linear, ease-in-out;
-      animation-iteration-count:infinite, infinite;
-      will-change:transform, left, top;
-    }
-    .bird svg{display:block;width:100%;height:auto;}
-
-    @keyframes fly{
-      0%{ transform: translateX(0) translateY(0) rotate(calc(var(--rot,0) * 1deg)); }
-      100%{ transform: translateX(calc(var(--dir,1) * -140vw)) translateY(0) rotate(calc(var(--rot,0) * 1deg)); }
-    }
-    @keyframes bob{
-      0%{ transform: translateY(0); }
-      25%{ transform: translateY(calc(-10px * var(--size,0.5))); }
-      50%{ transform: translateY(0); }
-      75%{ transform: translateY(calc(10px * var(--size,0.5))); }
-      100%{ transform: translateY(0); }
-    }
-
-    /* layout center card */
-    .center-wrap{
-      position:relative;
-      z-index:2;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:32px;
-      box-sizing:border-box;
-    }
-
+    /* Card sits within rotated kite but visually upright */
     .card{
-      width:100%;
-      max-width:420px;
-      background:var(--card-bg);
-      border-radius:14px;
-      padding:28px 28px 20px 28px;
-      box-shadow: 0 10px 30px rgba(11,37,69,0.12);
-      border:1px solid var(--glass-border);
-      backdrop-filter: blur(6px);
+      position:relative; width:360px; padding:28px; background:var(--card); border-radius:12px; z-index:2; box-shadow:0 10px 30px rgba(11,37,69,0.06);
+      transform: rotate(-45deg); /* undo kite rotation so content reads upright */
+      display:flex;flex-direction:column; gap:12px; align-items:stretch;
     }
 
-    .brand{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-bottom:8px;
-    }
-    .brand h1{font-size:20px;margin:0;letter-spacing:-0.2px}
-    .brand p{margin:0;color:var(--muted);font-size:13px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand h1{font-size:20px;margin:0}
+    .desc{color:var(--muted);font-size:13px}
 
-    .desc{color:var(--muted);font-size:14px;margin:12px 0 18px}
+    label{font-size:13px;color:#1e3b57}
+    input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(11,37,69,0.08);font-size:15px}
+    input:focus{outline:2px solid rgba(43,125,246,0.12)}
 
-    label{display:block;font-size:13px;color:#18406b;margin-bottom:6px}
-    input[type="email"], input[type="password"]{
-      width:100%;
-      border:1px solid rgba(11,37,69,0.08);
-      padding:12px 12px;
-      border-radius:10px;
-      font-size:15px;
-      box-sizing:border-box;
-      outline:none;
-      transition:box-shadow .18s, border-color .12s, transform .12s;
-      background:rgba(255,255,255,0.7);
-    }
-    input:focus{ box-shadow:0 6px 18px rgba(75,110,246,0.12); border-color:var(--accent)}
+    .row{display:flex;gap:10px}
+    .btn{background:linear-gradient(180deg,var(--accent),#1f6fe0);color:white;padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
 
-    .field{margin-bottom:12px}
-
-    .row{display:flex;gap:10px;align-items:center}
-    .btn{
-      background:linear-gradient(180deg,var(--accent),#3a55d9);
-      color:white;border:0;padding:12px 14px;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px;
-      box-shadow: 0 8px 18px rgba(75,110,246,0.18);
-    }
-    .btn:active{transform:translateY(1px)}
-
-    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-    .muted{color:var(--muted);font-size:13px}
-
-    .small{font-size:13px;color:var(--muted);}
-
-    /* password toggle */
-    .password-wrap{position:relative}
-    .toggle-pass{
-      position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;padding:6px;border-radius:8px;cursor:pointer;color:var(--muted);
-    }
+    .small{font-size:13px;color:var(--muted)}
 
     /* responsive */
-    @media (max-width:480px){
-      .card{padding:20px;border-radius:12px}
-      .brand h1{font-size:18px}
-    }
-
-    /* helper: hide outline for mouse users but keep for keyboard */
-    :focus{outline:2px solid transparent}
-    :focus-visible{outline:3px solid rgba(75,110,246,0.28);outline-offset:2px}
-
+    @media (max-width:480px){ .card{width:92vw;padding:18px} .kite{width:90vmin;height:90vmin} }
   </style>
 </head>
 <body>
-  <canvas class="sky" aria-hidden="true" id="skyCanvas"></canvas>
+  <div class="kite-wrap" role="presentation">
+    <div class="kite" aria-hidden="true"></div>
 
-  <main class="center-wrap">
-    <section class="card" aria-labelledby="login-title">
+    <form class="card" id="loginForm" aria-labelledby="loginTitle">
       <div class="brand">
-        <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true">
-          <defs>
-            <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#7bdff6"/><stop offset="1" stop-color="#4b6ef6"/></linearGradient>
-          </defs>
-          <rect rx="18" width="100" height="100" fill="url(#g)"/>
-          <path d="M30 60 C36 42, 64 42, 70 60 C64 54, 36 54, 30 60Z" fill="white" opacity="0.9"/>
-        </svg>
+        <svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" fill="url(#g)"/></svg>
         <div>
-          <h1 id="login-title">Welcome back</h1>
-          <p>Sign in to continue</p>
+          <h1 id="loginTitle">Sign in</h1>
+          <div class="desc">Welcome back — sign in to continue</div>
         </div>
       </div>
 
-      <p class="desc">A calm, friendly login with playful animated birds to keep the interface lively.</p>
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" required />
+      </div>
 
-      <form id="loginForm" aria-describedby="desc" autocomplete="on">
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" inputmode="email" placeholder="you@company.com" required />
-        </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Your password" required />
+      </div>
 
-        <div class="field password-wrap">
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="Enter your password" required aria-describedby="pwHelp" />
-          <button type="button" class="toggle-pass" id="togglePass" aria-pressed="false" aria-label="Show password">👁️</button>
-          <div id="pwHelp" class="small">Use at least 8 characters. We'll keep it safe.</div>
-        </div>
-
-        <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
-          <button class="btn" type="submit">Sign in</button>
-          <div class="small muted">or <a href="#" style="color:var(--accent);text-decoration:none">create an account</a></div>
-        </div>
-
-        <div class="meta">
-          <label class="row small"><input type="checkbox" /> Remember me</label>
-          <a href="#" class="small" style="color:var(--accent);text-decoration:none">Forgot password?</a>
-        </div>
-
-        <div class="meta" style="margin-top:14px;align-items:center;gap:12px">
-          <label class="small" for="birdDensity">Birds</label>
-          <input id="birdDensity" type="range" min="0" max="200" step="1" value="100" aria-label="Bird density" />
-          <div class="small muted" id="densityValue">100</div>
-          <label class="small" style="margin-left:auto"><input id="reduceMotion" type="checkbox" /> Reduce motion</label>
-        </div>
-      </form>
-
-    </section>
-  </main>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+        <button class="btn" type="submit">Login</button>
+        <a href="signup.html" class="small" style="color:var(--accent);text-decoration:none">Create account</a>
+      </div>
+    </form>
+  </div>
 
   <script>
-    // Accessibility: ensure focus starts on email field
     document.getElementById('email').focus();
-
-    // Password toggle
-    const pass = document.getElementById('password');
-    const toggle = document.getElementById('togglePass');
-    toggle.addEventListener('click', () => {
-      const isPwd = pass.type === 'password';
-      pass.type = isPwd ? 'text' : 'password';
-      toggle.setAttribute('aria-pressed', String(isPwd));
-      toggle.textContent = isPwd ? '🙈' : '👁️';
-    });
-
-    // Form submit handling (demo)
-    document.getElementById('loginForm').addEventListener('submit', (e)=>{
+    document.getElementById('loginForm').addEventListener('submit', function(e){
       e.preventDefault();
-      const email = document.getElementById('email').value;
-      // simple validation visual
-      if(!email.includes('@')){
-        alert('Please enter a valid email.');
-        return;
-      }
-      // fake login
-      const btn = document.querySelector('.btn');
-      btn.disabled = true;
-      const prev = btn.textContent;
-      btn.textContent = 'Signing in...';
-      setTimeout(()=>{
-        btn.disabled = false;
-        btn.textContent = prev;
-        alert('Welcome — this is a demo.');
-      }, 900);
+      const em = document.getElementById('email').value;
+      if(!em.includes('@')){ alert('Please enter a valid email'); return; }
+      alert('Signed in (demo)');
     });
-
-    // CANVAS-BASED BIRD RENDERER (configurable density + reduced-motion)
-    (function(){
-      const canvas = document.getElementById('skyCanvas');
-      const ctx = canvas.getContext('2d');
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      let w = window.innerWidth;
-      let h = window.innerHeight;
-      let rafId = null;
-
-      const densityInput = document.getElementById('birdDensity');
-      const densityValue = document.getElementById('densityValue');
-      const reduceMotionInput = document.getElementById('reduceMotion');
-
-      function resize(){
-        w = window.innerWidth; h = window.innerHeight;
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        canvas.width = Math.round(w * dpr);
-        canvas.height = Math.round(h * dpr);
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-      }
-
-      window.addEventListener('resize', ()=>{
-        resize();
-      });
-
-      resize();
-
-      // detect OS-level reduced-motion preference
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // initial density: respect OS preference
-      let targetDensity = prefersReduced ? 0 : parseInt(densityInput.value, 10) || 100;
-      densityInput.value = targetDensity;
-      densityValue.textContent = targetDensity;
-
-      // reduced-motion checkbox: default to OS preference
-      reduceMotionInput.checked = prefersReduced;
-
-      let BIRD_COUNT = targetDensity;
-      const birds = [];
-      const mouse = {x: w/2, y: h/2};
-      window.addEventListener('mousemove', (e)=>{ mouse.x = e.clientX; mouse.y = e.clientY; });
-
-      function rand(min,max){ return Math.random()*(max-min)+min; }
-
-      for(let i=0;i<BIRD_COUNT;i++){
-        const size = rand(6,18); // visual size
-        const y = rand(10, h-10);
-        const dir = Math.random() > 0.5 ? 1 : -1;
-        const speed = rand(18,100); // px/sec
-        const x = rand(0, w);
-        birds.push({x,y,size,dir,speed,offset:rand(0,Math.PI*2),alpha:rand(0.45,1)});
-      }
-
-      function adjustBirdCount(target){
-        target = Math.max(0, Math.min(400, Math.round(target)));
-        densityValue.textContent = target;
-        if(target === birds.length) return;
-        if(target > birds.length){
-          const add = target - birds.length;
-          for(let i=0;i<add;i++){
-            const size = rand(6,18);
-            const y = rand(10, h-10);
-            const dir = Math.random() > 0.5 ? 1 : -1;
-            const speed = rand(18,100);
-            const x = dir === 1 ? -rand(10,200) : w + rand(10,200);
-            birds.push({x,y,size,dir,speed,offset:rand(0,Math.PI*2),alpha:rand(0.45,1)});
-          }
-        } else {
-          birds.splice(0, birds.length - target);
-        }
-      }
-
-      // wire up density slider
-      densityInput.addEventListener('input', (e)=>{
-        const val = parseInt(e.target.value, 10) || 0;
-        targetDensity = val;
-        if(!reduceMotionInput.checked){
-          adjustBirdCount(val);
-        } else {
-          densityValue.textContent = val + ' (paused)';
-        }
-      });
-
-      // reduced-motion toggle
-      reduceMotionInput.addEventListener('change', (e)=>{
-        const on = e.target.checked;
-        if(on){
-          // pause animation and hide birds
-          if(rafId) cancelAnimationFrame(rafId); rafId = null;
-        } else {
-          // resume animation and apply target density
-          adjustBirdCount(targetDensity);
-          last = performance.now(); if(!rafId) rafId = requestAnimationFrame(step);
-        }
-        densityValue.textContent = on ? (targetDensity + ' (paused)') : targetDensity;
-      });
-
-      function drawBird(b, t){
-        // parallax factor based on distance from center
-        const px = (mouse.x - w/2) * 0.02 * (b.size/18);
-        const py = (mouse.y - h/2) * 0.01 * (b.size/18);
-        const x = b.x + Math.sin((t/1000) + b.offset) * (4 + b.size*0.08) + px;
-        const y = b.y + Math.cos((t/1200) + b.offset) * (3 + b.size*0.06) + py;
-        const tilt = Math.atan2(mouse.y - y, mouse.x - x) * 0.15 * b.dir;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(tilt);
-        ctx.globalAlpha = b.alpha;
-        ctx.strokeStyle = '#1e90ff';
-        ctx.lineWidth = Math.max(0.8, b.size/8);
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(-b.size*0.6, 0);
-        ctx.quadraticCurveTo(-b.size*0.15, -b.size*0.9, b.size*0.6, 0);
-        ctx.moveTo(-b.size*0.6, 0);
-        ctx.quadraticCurveTo(-b.size*0.15, b.size*0.9, b.size*0.6, 0);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      let last = performance.now();
-      function step(now){
-        const dt = (now - last) / 1000; last = now;
-        ctx.clearRect(0,0, w, h);
-        for(const b of birds){
-          b.x += b.dir * b.speed * dt;
-          // gentle vertical drift
-          b.y += Math.sin((now/1000) + b.offset) * 0.08;
-          // wrap horizontally
-          if(b.dir === 1 && b.x > w + 40) b.x = -40;
-          if(b.dir === -1 && b.x < -40) b.x = w + 40;
-          drawBird(b, now);
-        }
-        rafId = requestAnimationFrame(step);
-      }
-
-      // start loop unless reduced-motion is requested
-      if(!reduceMotionInput.checked){
-        rafId = requestAnimationFrame(step);
-      }
-
-      // pause when hidden to save CPU
-      document.addEventListener('visibilitychange', ()=>{
-        if(document.hidden){ if(rafId) cancelAnimationFrame(rafId); rafId = null; }
-        else { last = performance.now(); if(!rafId) rafId = requestAnimationFrame(step); }
-      });
-    })();
   </script>
 </body>
 </html>

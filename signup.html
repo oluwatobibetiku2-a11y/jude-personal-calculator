@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign up — Kite</title>
+  <style>
+    :root{ --blue1:#dff4ff; --blue2:#bfe9ff; --card:#ffffff; --accent:#2b7df6; --muted:#506070 }
+    html,body{height:100%;}
+    body{margin:0;background:linear-gradient(180deg,var(--blue1),var(--blue2));font-family:Inter,system-ui,Segoe UI,Roboto,Arial;padding:40px;display:flex;align-items:center;justify-content:center}
+
+    .kite-wrap{position:relative;width:min(960px,95vw);height:min(720px,85vh);display:flex;align-items:center;justify-content:center}
+    .kite{position:absolute;width:70vmin;height:70vmin;transform:rotate(45deg);border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(240,250,255,0.85));box-shadow: 0 25px 60px rgba(20,40,80,0.06);}
+    .card{position:relative;width:420px;padding:28px;border-radius:12px;background:var(--card);transform:rotate(-45deg);z-index:2;box-shadow:0 10px 30px rgba(11,37,69,0.06)}
+
+    label{display:block;margin-bottom:6px;color:#1e3b57}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(11,37,69,0.06);margin-bottom:12px}
+    .btn{background:linear-gradient(180deg,var(--accent),#1f6fe0);color:white;padding:10px;border-radius:8px;border:0;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px}
+
+    @media (max-width:480px){ .card{width:92vw;padding:18px} .kite{width:90vmin;height:90vmin} }
+  </style>
+</head>
+<body>
+  <div class="kite-wrap">
+    <div class="kite" aria-hidden="true"></div>
+    <form class="card" id="signupForm" aria-labelledby="signupTitle">
+      <h1 id="signupTitle">Create account</h1>
+      <div class="muted">Join us — create an account</div>
+
+      <label for="name">Full name</label>
+      <input id="name" name="name" type="text" placeholder="Your name" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="you@example.com" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" placeholder="Create a password" required />
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+        <button class="btn" type="submit">Sign up</button>
+        <a href="login.html" class="muted" style="margin-left:auto;text-decoration:none;color:var(--accent)">Sign in</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('name').focus();
+    document.getElementById('signupForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const em = document.getElementById('email').value;
+      if(!em.includes('@')){ alert('Please supply a valid email'); return; }
+      alert('Account created (demo)');
+    });
+  </script>
+</body>
+</html>
